@@ -76,7 +76,3 @@ This project implements a chat application that allows users to upload documents
 7.  It checks if the *combined* prompt exceeds the token limit. If it does, it attempts to reduce the included chat history.
 8.  If the prompt fits, it's sent to the `gemini-2.5-pro-exp-03-25` model.
 9.  The model's response is displayed in the chat interface.
-
-## `.gitignore`
-
-A `.gitignore` file is included to exclude common Python artifacts, virtual environments (`.venv`), and the `.env` file containing your API key from version control.
