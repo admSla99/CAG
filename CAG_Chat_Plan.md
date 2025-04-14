@@ -105,3 +105,48 @@ sequenceDiagram
 - [X] **Task 6.2:** Implement logic to format the last N messages (e.g., 4 user/assistant pairs = 8 messages total) from the history into a suitable string format for the prompt.
 - [X] **Task 6.3:** Update the prompt construction logic in `generate_response` to combine: Formatted History + Full Document Text + Current User Query.
 - [X] **Task 6.4:** Implement a check *before* calling the API to ensure the *combined* token count (history + document + query) does not exceed the 1,000,000 limit. If it does, potentially truncate the *history* first, then notify the user if it still exceeds the limit (document truncation is less desirable for CAG).
+
+## Phase 7: Prompt Gallery & Selection
+
+- [X] **Task 7.1: Multi-Page Setup:**
+    - Create a `pages` directory.
+    - Main chat stays in `app.py`.
+    - Create `pages/1_Manage_Prompts.py`.
+- [X] **Task 7.2: Prompt Storage Mechanism:**
+    - Define storage format (`prompts.json` with `id`/`name`/`text`).
+    - Create `prompt_utils.py` with `load_prompts()`, `save_prompts()`, `add_prompt()`, `delete_prompt()`.
+- [X] **Task 7.3: Prompt Management UI (`pages/1_Manage_Prompts.py`):**
+    - Load and display existing prompts.
+    - Add UI for creating new prompts (name, text, save button). Handle unique names.
+    - Add UI for deleting prompts (selection, delete button, confirmation).
+    - Use `st.rerun()` to refresh list after changes.
+- [X] **Task 7.4: Prompt Selection UI (Main Chat Page):**
+    - Add `st.selectbox` (in sidebar) populated with prompt names from `load_prompts()`.
+    - Store selected prompt text (or default) in `st.session_state['selected_system_prompt']`. Initialize and update state.
+- [X] **Task 7.5: Prompt Construction (Main Chat Page):** Modify `generate_response` to retrieve and prepend `st.session_state['selected_system_prompt']`.
+- [X] **Task 7.6: Token Calculation Update (Main Chat Page):** Adjust pre-API token check to include tokens from the selected system prompt (handled implicitly by counting the full constructed prompt).
+- [X] **Task 7.7: Documentation Update (`README.md`):** Explain multi-page structure, prompt management, and selection.
+- [X] **Task 7.8: Add `prompts.json` to `.gitignore`:** Ensure user prompts are not committed.
+
+## Phase 8: UI-Based API Key Input (with Local Storage)
+
+- [X] **Task 8.0: Add Dependency:** Install `streamlit-local-storage`. Add it to requirements instructions in `README.md`.
+- [X] **Task 8.1: Session State:** Add `st.session_state.api_key_valid` (bool) and `st.session_state.current_api_key` (str).
+- [X] **Task 8.2: Initial API Key Check:**
+    - On app start, try loading key from Browser Local Storage.
+    - If found & validates via `genai.configure()`, set `api_key_valid=True`, store in `current_api_key`.
+    - If not found or invalid, try loading from `.env`.
+    - If `.env` key found & validates, set `api_key_valid=True`, store in `current_api_key`.
+    - Otherwise, `api_key_valid=False`.
+- [X] **Task 8.3: Conditional UI Display:** Wrap main app UI (`app.py`) in `if st.session_state.api_key_valid:`.
+- [X] **Task 8.4: API Key Input Section:** If `api_key_valid` is False, display:
+    - Title, `st.text_input` (password type), "Validate and Save Key" button.
+    - Markdown guide/link to get API key.
+- [X] **Task 8.5: Validation & Saving Logic:** On button click:
+    - Get key from input.
+    - Validate with `genai.configure()`.
+    - If valid: Save to Browser Local Storage, store in `current_api_key`, set `api_key_valid=True`, re-init `model`, `st.rerun()`.
+    - If invalid: Show `st.error`.
+- [X] **Task 8.6: Update Function Calls:** Ensure `generate_response` and `model` initialization use `st.session_state.current_api_key`.
+- [X] **Task 8.7: Documentation Update (`README.md`):** Explain UI key input, local storage persistence, and `.env` fallback.
+- [X] **Task 8.8: Update Plan File:** Mark Phase 8 tasks as complete upon finishing implementation. (Self-referential task for tracking).
