@@ -52,45 +52,7 @@ graph LR
     E -- 8. Display Response --> B;
 ```
 
-## Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant StreamlitUI as app.py
-    participant DocProcessor as document_processor.py
-    participant SessionState as st.session_state
-    participant GeminiAPI as genai
-
-    User->>+StreamlitUI: Upload Document (file)
-    StreamlitUI->>+DocProcessor: extract_text_from_file(file)
-    DocProcessor-->>-StreamlitUI: extracted_text
-    StreamlitUI->>StreamlitUI: Check text size (MAX_CHARS)
-    alt Text size OK
-        StreamlitUI->>+SessionState: Store document_content = extracted_text
-        SessionState-->>-StreamlitUI: OK
-        StreamlitUI->>User: Display Chat Interface & Success Msg
-    else Text size too large
-        StreamlitUI->>User: Show Error Message
-        StreamlitUI->>+SessionState: Set document_content = None
-        SessionState-->>-StreamlitUI: OK
-    end
-
-    opt Document Processed Successfully
-        User->>+StreamlitUI: Enter Chat Prompt (user_query)
-        StreamlitUI->>+SessionState: Get document_content
-        SessionState-->>-StreamlitUI: document_text
-        StreamlitUI->>StreamlitUI: Construct full_prompt (document_text + user_query)
-        StreamlitUI->>+GeminiAPI: generate_content(full_prompt, model='models/gemini-2.5-pro-exp-03-25')
-        GeminiAPI-->>-StreamlitUI: response_text
-        StreamlitUI->>User: Display response_text
-        StreamlitUI->>+SessionState: Append user_query to messages
-        SessionState-->>-StreamlitUI: OK
-        StreamlitUI->>+SessionState: Append response_text to messages
-        SessionState-->>-StreamlitUI: OK
-    end
-```
-
+## Phase 5: Token Counting & Context Limit Handling
 ## Phase 5: Token Counting & Context Limit Handling
 
 - [X] **Task 5.1:** Implement token counting using `model.count_tokens()` for the `models/gemini-2.5-pro-exp-03-25` model.
