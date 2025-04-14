@@ -19,8 +19,8 @@ if "document_content" not in st.session_state:
     st.session_state.document_content = None
 if "uploaded_file_name" not in st.session_state:
     st.session_state.uploaded_file_name = None
-if "processed_file_id" not in st.session_state: # Track processed file ID
-    st.session_state.processed_file_id = None
+if "processed_file_size" not in st.session_state: # Track processed file size
+    st.session_state.processed_file_size = None
 if "document_token_count" not in st.session_state:
     st.session_state.document_token_count = 0
 if "api_key_valid" not in st.session_state:
@@ -221,9 +221,11 @@ if st.session_state.api_key_valid:
     # Check if a new file has been uploaded
     if uploaded_file is not None:
         # Check if the file object itself has changed, more reliable than just name
-        if "processed_file_id" not in st.session_state or uploaded_file.id != st.session_state.processed_file_id:
-            st.session_state.processed_file_id = uploaded_file.id # Store file ID
+        # Check if name or size differs from the last processed file
+        if (uploaded_file.name != st.session_state.get("uploaded_file_name") or
+                uploaded_file.size != st.session_state.get("processed_file_size")):
             st.session_state.uploaded_file_name = uploaded_file.name
+            st.session_state.processed_file_size = uploaded_file.size # Store size
             # Clear previous content and chat history on new upload
             st.session_state.document_content = None
             st.session_state.messages = []
