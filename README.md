@@ -115,6 +115,7 @@ sequenceDiagram
                       GeminiAPI-->>-StreamlitUI: OK
                       StreamlitUI->>+SessionState: api_key_valid=True, current_api_key=env_key
                       SessionState-->>-StreamlitUI: OK
+                 end
                  else Key Invalid
                       GeminiAPI-->>-StreamlitUI: Error
                       StreamlitUI->>+SessionState: api_key_valid=False
