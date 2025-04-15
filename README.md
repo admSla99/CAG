@@ -126,6 +126,7 @@ sequenceDiagram
                  SessionState-->>-StreamlitUI: OK
             end
         end
+    end
     else No stored_key
         StreamlitUI->>StreamlitUI: Try .env key (load_dotenv, os.getenv)
         alt env_key exists
