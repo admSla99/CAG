@@ -84,74 +84,75 @@ This project implements a chat application that allows users to upload documents
 10. The model's response is displayed in the chat interface.
 
 ## Application Flow (Sequence Diagram)
-
-sequenceDiagram
-    participant User
-    participant StreamlitUI as app.py
-    participant SessionState as st.session_state
-    participant DocProcessor as document_processor.py
-    participant GeminiAPI as genai
-
-    %% Initialization & API Key %%
-    StreamlitUI->>+SessionState: Initialize state
-    SessionState-->>-StreamlitUI: OK
-    StreamlitUI->>StreamlitUI: Check for existing valid API Key (storage/env)
-    alt Existing Key Valid
-        StreamlitUI->>+SessionState: api_key_valid=True
-        SessionState-->>-StreamlitUI: OK
-    else No Valid Key Found
-        StreamlitUI->>User: Display API Key Input Form
-        User->>+StreamlitUI: Enter API Key + Click Validate
-        StreamlitUI->>+GeminiAPI: Validate Key
-        alt Key Valid
-            GeminiAPI-->>-StreamlitUI: OK
-            StreamlitUI->>StreamlitUI: Store Key (e.g., Local Storage)
-            StreamlitUI->>+SessionState: api_key_valid=True
+```mermaind
+   sequenceDiagram
+       participant User
+       participant StreamlitUI as app.py
+       participant SessionState as st.session_state
+       participant DocProcessor as document_processor.py
+       participant GeminiAPI as genai
+   
+       %% Initialization & API Key %%
+       StreamlitUI->>+SessionState: Initialize state
+       SessionState-->>-StreamlitUI: OK
+       StreamlitUI->>StreamlitUI: Check for existing valid API Key (storage/env)
+       alt Existing Key Valid
+           StreamlitUI->>+SessionState: api_key_valid=True
+           SessionState-->>-StreamlitUI: OK
+       else No Valid Key Found
+           StreamlitUI->>User: Display API Key Input Form
+           User->>+StreamlitUI: Enter API Key + Click Validate
+           StreamlitUI->>+GeminiAPI: Validate Key
+           alt Key Valid
+               GeminiAPI-->>-StreamlitUI: OK
+               StreamlitUI->>StreamlitUI: Store Key (e.g., Local Storage)
+               StreamlitUI->>+SessionState: api_key_valid=True
+               SessionState-->>-StreamlitUI: OK
+               StreamlitUI->>StreamlitUI: Rerun/Refresh UI
+           else Key Invalid
+               GeminiAPI-->>-StreamlitUI: Error
+               StreamlitUI->>User: Show Invalid Key Error
+           end
+       end
+   
+       %% Main Application Flow (Assuming API Key is Valid) %%
+       User->>+StreamlitUI: Upload Document (file)
+       StreamlitUI->>+DocProcessor: extract_text_from_file(file)
+       alt Extraction Successful
+           DocProcessor-->>-StreamlitUI: extracted_text
+           StreamlitUI->>+GeminiAPI: count_tokens(extracted_text)
+           alt token_count <= LIMIT
+               GeminiAPI-->>-StreamlitUI: token_count
+               StreamlitUI->>+SessionState: Store document_content, token_count
+               SessionState-->>-StreamlitUI: OK
+               StreamlitUI->>User: Display Success & Token Info
+           else token_count > LIMIT
+               GeminiAPI-->>-StreamlitUI: token_count # Still need the response even if over limit
+               StreamlitUI->>User: Show Document Too Large Error
+               StreamlitUI->>+SessionState: Clear document state
+               SessionState-->>-StreamlitUI: OK
+           end
+       else Extraction Failed
+            DocProcessor-->>-StreamlitUI: Error # Indicate failure back to caller
+            StreamlitUI->>User: Show Extraction Error
+            StreamlitUI->>+SessionState: Clear document state # Optional: Clear state on failure too
             SessionState-->>-StreamlitUI: OK
-            StreamlitUI->>StreamlitUI: Rerun/Refresh UI
-        else Key Invalid
-            GeminiAPI-->>-StreamlitUI: Error
-            StreamlitUI->>User: Show Invalid Key Error
-        end
-    end
-
-    %% Main Application Flow (Assuming API Key is Valid) %%
-    User->>+StreamlitUI: Upload Document (file)
-    StreamlitUI->>+DocProcessor: extract_text_from_file(file)
-    alt Extraction Successful
-        DocProcessor-->>-StreamlitUI: extracted_text
-        StreamlitUI->>+GeminiAPI: count_tokens(extracted_text)
-        alt token_count <= LIMIT
-            GeminiAPI-->>-StreamlitUI: token_count
-            StreamlitUI->>+SessionState: Store document_content, token_count
-            SessionState-->>-StreamlitUI: OK
-            StreamlitUI->>User: Display Success & Token Info
-        else token_count > LIMIT
-            GeminiAPI-->>-StreamlitUI: token_count # Still need the response even if over limit
-            StreamlitUI->>User: Show Document Too Large Error
-            StreamlitUI->>+SessionState: Clear document state
-            SessionState-->>-StreamlitUI: OK
-        end
-    else Extraction Failed
-         DocProcessor-->>-StreamlitUI: Error # Indicate failure back to caller
-         StreamlitUI->>User: Show Extraction Error
-         StreamlitUI->>+SessionState: Clear document state # Optional: Clear state on failure too
-         SessionState-->>-StreamlitUI: OK
-    end
-
-    opt Document Ready
-        User->>+StreamlitUI: Select System Prompt
-        StreamlitUI->>+SessionState: Store selected_system_prompt
-        SessionState-->>-StreamlitUI: OK
-
-        User->>+StreamlitUI: Enter Chat Prompt (user_query)
-        StreamlitUI->>+SessionState: Get doc_text, history, system_prompt
-        SessionState-->>-StreamlitUI: Data for prompt
-        StreamlitUI->>StreamlitUI: Prepare prompt (system + history + doc + query)
-        note right of StreamlitUI: May truncate history if prompt exceeds token limit
-        StreamlitUI->>+GeminiAPI: generate_content(prepared_prompt)
-        GeminiAPI-->>-StreamlitUI: response_text
-        StreamlitUI->>User: Display response_text
-        StreamlitUI->>+SessionState: Append query & response to history
-        SessionState-->>-StreamlitUI: OK
-    end
+       end
+   
+       opt Document Ready
+           User->>+StreamlitUI: Select System Prompt
+           StreamlitUI->>+SessionState: Store selected_system_prompt
+           SessionState-->>-StreamlitUI: OK
+   
+           User->>+StreamlitUI: Enter Chat Prompt (user_query)
+           StreamlitUI->>+SessionState: Get doc_text, history, system_prompt
+           SessionState-->>-StreamlitUI: Data for prompt
+           StreamlitUI->>StreamlitUI: Prepare prompt (system + history + doc + query)
+           note right of StreamlitUI: May truncate history if prompt exceeds token limit
+           StreamlitUI->>+GeminiAPI: generate_content(prepared_prompt)
+           GeminiAPI-->>-StreamlitUI: response_text
+           StreamlitUI->>User: Display response_text
+           StreamlitUI->>+SessionState: Append query & response to history
+           SessionState-->>-StreamlitUI: OK
+       end
+```
